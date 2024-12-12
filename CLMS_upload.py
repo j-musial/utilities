@@ -37,7 +37,7 @@ if bool(opt.local_file):
 		f = open(opt.local_file, 'rb')
 		md5_checksum=md5(f.read()).hexdigest()
 		f.close()
-		rclone.copy(opt.local_file,'CLMS:'+opt.producer_bucket+timestamp.strftime('/%Y/%m/%d/'),ignore_existing=opt.overwrite,args=['--retries=20','--low-level-retries=20','--checksum','--s3-use-multipart-uploads=false','--metadata','--metadata-set uploaded='+timestamp.strftime('%Y-%m-%dT%H:%M:%S'), '--metadata-set WorkflowName="clms_upload"','--metadata-set source-s3-endpoint-url="'+environ['RCLONE_CONFIG_CLMS_ENDPOINT']+'"','--metadata-set source-s3-path="'+opt.producer_bucket+timestamp.strftime('/%Y/%m/%d/')+path.basename(opt.local_file)+'"','--metadata-set file-size='+file_size,'--metadata-set last-modified='+last_modified])
+		rclone.copy(opt.local_file,'CLMS:'+opt.producer_bucket+timestamp.strftime('/%Y/%m/%d/'),ignore_existing=opt.overwrite,args=['--s3-no-check-bucket','--retries=20','--low-level-retries=20','--checksum','--s3-use-multipart-uploads=false','--metadata','--metadata-set uploaded='+timestamp.strftime('%Y-%m-%dT%H:%M:%S'), '--metadata-set WorkflowName="clms_upload"','--metadata-set source-s3-endpoint-url="'+environ['RCLONE_CONFIG_CLMS_ENDPOINT']+'"','--metadata-set source-s3-path="'+opt.producer_bucket+timestamp.strftime('/%Y/%m/%d/')+path.basename(opt.local_file)+'"','--metadata-set file-size='+file_size,'--metadata-set last-modified='+last_modified])
 	except:
 		print('ERROR:Uploading file:'+opt.local_file)
 		print_exc()
