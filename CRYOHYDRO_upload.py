@@ -27,6 +27,9 @@ if not bool(opt.s3_path):
 	exit(1)
 if opt.s3_path[-1] == '/':
 	opt.s3_path=opt.s3_path[:-1]
+if not 'RCLONE_CONFIG_CLMS_ACCESS_KEY_ID' in environ.keys():
+	print('ERROR: Environmental variable "RCLONE_CONFIG_CLMS_ACCESS_KEY_ID" is not set!')
+	exit(1)	
 if bool(opt.local_file):
 	if not path.exists(opt.local_file):
 		print('ERROR:File does not exists:'+opt.local_file)
@@ -38,7 +41,7 @@ if bool(opt.local_file):
 		f = open(opt.local_file, 'rb')
 		md5_checksum=md5(f.read()).hexdigest()
 		f.close()
-		rclone.copy(opt.local_file,('CLMS:CLMS-CRYOHYDRO-INGESTION/'+opt.s3_path).replace('//','/'),ignore_existing=opt.overwrite,args=['--s3-no-check-bucket','--retries=20','--low-level-retries=20','--checksum','--s3-use-multipart-uploads=false','--metadata','--metadata-set uploaded='+str(timestamp.strftime('%Y-%m-%dT%H:%M:%S')), '--metadata-set WorkflowName="clms_upload"','--metadata-set source-s3-endpoint-url="'+environ['RCLONE_CONFIG_CLMS_ENDPOINT']+'"','--metadata-set source-s3-path=s3://'+('CLMS-CRYOHYDRO-INGESTION/'+opt.s3_path+'/'+path.basename(opt.local_file)).replace('//','/'),'--metadata-set file-size='+file_size,'--metadata-set last_modified='+last_modified])
+		rclone.copy(opt.local_file,('CLMS:CLMS-CRYOHYDRO-INGESTION/'+opt.s3_path).replace('//','/'),ignore_existing=opt.overwrite,args=['--s3-no-check-bucket','--retries=20','--low-level-retries=20','--checksum','--s3-use-multipart-uploads=false','--metadata','--metadata-set uploaded='+str(timestamp.strftime('%Y-%m-%dT%H:%M:%S')), '--metadata-set WorkflowName="clms_upload"','--metadata-set source-s3-endpoint-url="'+environ['RCLONE_CONFIG_CLMS_ENDPOINT']+'"','--metadata-set source-s3-path=s3://'+('CLMS-CRYOHYDRO-INGESTION/'+opt.s3_path+'/'+path.basename(opt.local_file)).replace('//','/'),'--metadata-set file-size='+file_size,'--metadata-set md5='+str(md5_checksum),'--metadata-set last_modified='+last_modified,'--metadata-set s3-public-key='+environ['RCLONE_CONFIG_CLMS_ACCESS_KEY_ID']])
 	except:
 		print('ERROR:Uploading file:'+opt.local_file)
 		print_exc()
