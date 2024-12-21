@@ -28,7 +28,7 @@ Command Line Options
 -p, --path-s3          Destination path in S3 bucket
 -i, --id               S3 access key ID (optional if using config file)
 -k, --secret           S3 secret access key (optional if using config file)
--o, --overwrite        Prevent overwriting existing files (default: True)
+-o, --overwrite        Overwrites existing files in the destination bucket
 
 
 Author: CDSE & CLMS
@@ -180,7 +180,7 @@ def main():
 	parser.add_option("-l", "--local-file", dest="local_file",
 					  help="local path (i.e. file system) path to input file")
 	parser.add_option("-o", "--overwrite", dest="overwrite",
-					  help="shall the uploaded S3 product be replaced in the CLMS producer bucket",
+					  help="overwrite products already available in the CLMS bucket",
 					  default=True, action='store_false')
 	parser.add_option("-p", "--path-s3", dest="s3_path",
 					  help="relative path of a file in the S3 bucket of the CLMS producer")
