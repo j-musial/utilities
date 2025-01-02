@@ -36,12 +36,12 @@ if bool(opt.local_file):
 		exit(1)			
 	try:
 		timestamp=datetime.now()
-		last_modified=datetime.fromtimestamp(path.getmtime(opt.local_file)).strftime('%Y-%m-%dT%H:%M:%S')
+		last_modified=str(int(datetime.strptime(http_header.headers['Last-Modified'],'%a, %d %b %Y %H:%M:%S %Z').timestamp()))
 		file_size=str(path.getsize(opt.local_file))
 		f = open(opt.local_file, 'rb')
 		md5_checksum=md5(f.read()).hexdigest()
 		f.close()
-		rclone.copy(opt.local_file,('CLMS:CLMS-CRYOHYDRO-INGESTION/'+opt.s3_path).replace('//','/'),ignore_existing=opt.overwrite,args=['--s3-no-check-bucket','--retries=20','--low-level-retries=20','--checksum','--s3-use-multipart-uploads=false','--metadata','--metadata-set uploaded='+str(timestamp.strftime('%Y-%m-%dT%H:%M:%S')), '--metadata-set WorkflowName="clms_upload"','--metadata-set source-s3-endpoint-url="'+environ['RCLONE_CONFIG_CLMS_ENDPOINT']+'"','--metadata-set source-s3-path=s3://'+('CLMS-CRYOHYDRO-INGESTION/'+opt.s3_path+'/'+path.basename(opt.local_file)).replace('//','/'),'--metadata-set file-size='+file_size,'--metadata-set md5='+str(md5_checksum),'--metadata-set last_modified='+last_modified,'--metadata-set s3-public-key='+environ['RCLONE_CONFIG_CLMS_ACCESS_KEY_ID']])
+		rclone.copy(opt.local_file,('CLMS:CLMS-CRYOHYDRO-INGESTION/'+opt.s3_path).replace('//','/'),ignore_existing=opt.overwrite,args=['--s3-no-check-bucket','--retries=20','--low-level-retries=20','--checksum','--s3-use-multipart-uploads=false','--metadata','--metadata-set uploaded='+str(int(timestamp.timestamp())), '--metadata-set WorkflowName="clms_upload"','--metadata-set source-s3-endpoint-url="'+environ['RCLONE_CONFIG_CLMS_ENDPOINT']+'"','--metadata-set source-s3-path=s3://'+('CLMS-CRYOHYDRO-INGESTION/'+opt.s3_path+'/'+path.basename(opt.local_file)).replace('//','/'),'--metadata-set file-size='+file_size,'--metadata-set md5='+str(md5_checksum),'--metadata-set last_modified='+last_modified,'--metadata-set s3-public-key='+environ['RCLONE_CONFIG_CLMS_ACCESS_KEY_ID']])
 	except:
 		print('ERROR:Uploading file:'+opt.local_file)
 		print_exc()
