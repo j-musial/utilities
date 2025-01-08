@@ -257,9 +257,9 @@ Notes:
 	)
 
 	parser.add_option(
-		"-o", "--no-overwrite",
+		"-o", "--overwrite",
 		dest="overwrite",
-		help="Do not overwrite existing files in the destination bucket",
+		help="Overwrite existing files in the destination bucket, if the MD5 checksum matches the system will anyhow skipp the file",
 		default=True,
 		action="store_false"
 	)
