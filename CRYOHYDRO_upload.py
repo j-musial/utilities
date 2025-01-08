@@ -15,7 +15,7 @@ Requirements
 Configuration
 ------------
 The first time the script is run access_key and secret_key must be provided
-```python CRYOHYDRO_uploader.py -l /path/to/file -p destination/path -i access_key -k secret_key ```
+```python CRYOHYDRO_uploader.py -l /path/to/file -p destination/path -c credential ```
 
 
 Usage Examples
@@ -42,8 +42,10 @@ from datetime import datetime
 from hashlib import md5
 from optparse import OptionParser
 from os import path
-from typing import Dict, Union, Optional
+from pathlib import Path
+from typing import Dict, Union, Optional, Tuple
 from dataclasses import dataclass
+
 
 from rclone_python import rclone
 
@@ -62,6 +64,10 @@ class UploadConfig:
 
 class UploadError(Exception):
 	"""Custom exception for upload-related errors"""
+	pass
+
+class CredentialsError(Exception):
+	"""Custom exception for credentials related errors"""
 	pass
 
 
@@ -125,10 +131,38 @@ def pusher(config: UploadConfig, local_file: str, s3_path: str, overwrite: bool 
 		raise UploadError(f"Error uploading file {local_file}: {str(e)}")
 
 
-def rclone_setup(access_key_id: str, secret_access_key: str) -> None:
+def parse_credentials(credentials_path: Path) -> Tuple[str, str]:
+	"""Parse the credential file to extract access key ID and secret access key."""
+
+	try:
+		credentials_path = Path(credentials_path)
+		if not credentials_path.exists():
+			raise CredentialsError(f"Credentials file not found: {credentials_path}")
+
+		with credentials_path.open('r') as f:
+			lines = [line.strip() for line in f if line.strip()]
+
+			if not lines:
+				raise CredentialsError("Credentials file is empty")
+
+			try:
+				access_key_id, secret_access_key = lines[0].split(':')
+				return access_key_id.strip(), secret_access_key.strip()
+			except ValueError:
+				raise CredentialsError("Invalid credentials format. Expected 'access_key_id:secret_access_key'")
+
+	except Exception as e:
+		if isinstance(e, CredentialsError):
+			raise
+		raise CredentialsError(f"Error reading credentials: {str(e)}")
+
+
+def rclone_setup(credentials_path: Path) -> None:
 	"""Configure rclone with provided credentials"""
 	try:
 		from rclone_python.remote_types import RemoteTypes
+
+		access_key_id, secret_access_key = parse_credentials(credentials_path)
 
 		rclone.create_remote(
 			'CLMS',
@@ -138,8 +172,6 @@ def rclone_setup(access_key_id: str, secret_access_key: str) -> None:
 			**{"type": 's3',
 			   "provider": 'Ceph',
 			   "env_auth": "True",
-			   #"access_key_id ": access_key_id,
-			   #"secret_access_key": secret_access_key,
 			   "region": 'default',
 			   "endpoint": 'https://s3.waw3-1.cloudferro.com',
 			   "location_constraint": 'default',
@@ -150,7 +182,7 @@ def rclone_setup(access_key_id: str, secret_access_key: str) -> None:
 
 
 def config_settings(config_path: str) -> UploadConfig:
-	"""Read and parse configuration file"""
+	"""Read and parse a configuration file"""
 	if not os.path.exists(config_path):
 		raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
@@ -184,16 +216,14 @@ def main():
 					  default=True, action='store_false')
 	parser.add_option("-p", "--path-s3", dest="s3_path",
 					  help="relative path of a file in the S3 bucket of the CLMS producer")
-	parser.add_option("-i", "--id", dest="access_key_id",
-					  help="S3 access key id")
-	parser.add_option("-k", "--secret", dest="secret_access_key",
-					  help="S3 secret access key")
+	parser.add_option("-c", "--credentials_path", dest="credentials_path",
+					  help="file path to the S3 credentials" )
 
 	options, _ = parser.parse_args()
 
 	try:
-		if options.access_key_id and options.secret_access_key:
-			rclone_setup(options.access_key_id, options.secret_access_key)
+		if options.credentials:
+			rclone_setup(Path(options.credentials))
 			config = UploadConfig(
 				rclone_type='s3',
 				provider='Ceph',
