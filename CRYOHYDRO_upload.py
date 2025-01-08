@@ -203,7 +203,7 @@ def config_settings(config_path: str) -> UploadConfig:
 
 def main():
 
-	package_name = 'rclone-python'
+	package_name = 'rclone_python'
 	if importlib.util.find_spec(package_name) is None:
 		raise UploadError(f"{package_name} is not installed. Please see: https://pypi.org/project/rclone-python/")
 	else:
