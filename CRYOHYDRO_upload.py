@@ -207,22 +207,85 @@ def main():
 	if not rclone.is_installed():
 		raise UploadError("rclone binary not detected. Please see: https://rclone.org/install/")
 
-	parser = OptionParser()
-	parser.add_option("-l", "--local-file", dest="local_file",
-					  help="local path (i.e. file system) path to input file")
-	parser.add_option("-o", "--overwrite", dest="overwrite",
-					  help="overwrite products already available in the CLMS bucket",
-					  default=True, action='store_false')
-	parser.add_option("-p", "--path-s3", dest="s3_path",
-					  help="relative path of a file in the S3 bucket of the CLMS producer")
-	parser.add_option("-c", "--credentials_path", dest="credentials_path",
-					  help="file path to the S3 credential" )
+	usage = """
+Usage: %prog [options] 
 
-	options, _ = parser.parse_args()
+This script uploads files to CLMS S3 storage using rclone.
+
+Examples:
+  First time usage with credentials:
+    %prog -l /path/to/file.tif -p destination/path -c /path/to/credentials.txt
+
+  Subsequent usage (after credentials are configured):
+    %prog -l /path/to/file.tif -p destination/path
+
+  Upload without overwriting existing files:
+    %prog -l /path/to/file.tif -p destination/path --no-overwrite
+
+Notes:
+  - The credentials file should contain a single line with format: access_key_id:secret_access_key
+  - The destination path is relative to the CLMS-CRYOHYDRO-INGESTION bucket
+  - Files are uploaded with metadata including timestamp, size, and MD5 checksum
+"""
+
+	parser = OptionParser(usage=usage, version="%prog 0.0.10")
+
+	parser.add_option(
+		"-l", "--local-file",
+		dest="local_file",
+		help="Path to the local file to upload (REQUIRED)",
+		metavar="FILE"
+	)
+
+	parser.add_option(
+		"-p", "--path-s3",
+		dest="s3_path",
+		help="Destination path in S3 bucket relative to CLMS-CRYOHYDRO-INGESTION (REQUIRED)",
+		metavar="PATH"
+	)
+
+	parser.add_option(
+		"-c", "--credentials-path",
+		dest="credentials_path",
+		help="Path to the S3 credentials file (Required for first-time setup)",
+		metavar="FILE"
+	)
+
+	parser.add_option(
+		"-o", "--no-overwrite",
+		dest="overwrite",
+		help="Do not overwrite existing files in the destination bucket",
+		default=True,
+		action="store_false"
+	)
+
+	# Add sections to the help output
+	parser.format_help = lambda: parser.get_usage() + """
+Required Arguments:
+  -l FILE, --local-file=FILE     Local file to upload
+  -p PATH, --path-s3=PATH        Destination path in S3 bucket
+
+Optional Arguments:
+  -h, --help                     Show this help message and exit
+  --version                      Show program's version number and exit
+  -c FILE, --credentials=FILE    S3 credentials file (required for first use)
+  -o, --no-overwrite            Do not overwrite existing files
+
+Environment Setup:
+  1. Ensure rclone is installed: https://rclone.org/install/
+  2. For first-time use, provide credentials with -c option
+  3. Subsequent uploads will use saved credentials
+
+Return Codes:
+  0 - Success
+  1 - Error (credentials, file access, network, etc.)
+"""
+
+	options, args = parser.parse_args()
 
 	try:
-		if options.credentials:
-			rclone_setup(Path(options.credentials))
+		if options.credentials_path:
+			rclone_setup(Path(options.credentials_path))
 			config = UploadConfig(
 				rclone_type='s3',
 				provider='Ceph',
@@ -236,11 +299,11 @@ def main():
 		else:
 			config_path = os.path.join(os.path.expanduser("~"), ".config", "rclone", "rclone.conf")
 			if not os.path.exists(config_path):
-				raise UploadError("S3 credentials not present, please provide through --id and --secret")
+				raise UploadError("S3 credentials not present. Please provide credentials using -c/--credentials-path")
 			config = config_settings(config_path)
 
 		if not options.local_file or not options.s3_path:
-			raise UploadError("Both --local-file and --path-s3 must be provided")
+			parser.error("Both --local-file and --path-s3 are required")
 
 		pusher(config, options.local_file, options.s3_path, options.overwrite)
 		print(f"Successfully uploaded {options.local_file}")
