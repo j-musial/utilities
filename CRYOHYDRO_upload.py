@@ -291,21 +291,11 @@ Return Codes:
 	try:
 		if options.credentials_path:
 			rclone_setup(Path(options.credentials_path))
-			config = UploadConfig(
-				rclone_type='s3',
-				provider='Ceph',
-				env_auth=True,
-				access_key_id=options.access_key_id,
-				secret_access_key=options.secret_access_key,
-				region='default',
-				endpoint='https://s3.waw3-1.cloudferro.com',
-				location_constraint='default'
-			)
-		else:
-			config_path = os.path.join(os.path.expanduser("~"), ".config", "rclone", "rclone.conf")
-			if not os.path.exists(config_path):
-				raise UploadError("S3 credentials not present. Please provide credentials using -c/--credentials-path")
-			config = config_settings(config_path)
+
+		config_path = os.path.join(os.path.expanduser("~"), ".config", "rclone", "rclone.conf")
+		if not os.path.exists(config_path):
+			raise UploadError("S3 credentials not present. Please provide credentials using -c/--credentials-path")
+		config = config_settings(config_path)
 
 		if not options.local_file or not options.s3_path:
 			parser.error("Both --local-file and --path-s3 are required")
