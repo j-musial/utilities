@@ -47,6 +47,15 @@ from dataclasses import dataclass
 
 import importlib.util
 
+package_name = 'rclone_python'
+if importlib.util.find_spec(package_name) is None:
+	print(f"{package_name} is not installed. Please see: https://pypi.org/project/rclone-python/")
+else:
+	from rclone_python import rclone
+
+if not rclone.is_installed():
+	print("rclone binary not detected. Please see: https://rclone.org/install/")
+
 @dataclass
 class UploadConfig:
 	rclone_type: str
@@ -202,15 +211,6 @@ def config_settings(config_path: str) -> UploadConfig:
 
 
 def main():
-
-	package_name = 'rclone_python'
-	if importlib.util.find_spec(package_name) is None:
-		raise UploadError(f"{package_name} is not installed. Please see: https://pypi.org/project/rclone-python/")
-	else:
-		from rclone_python import rclone
-
-	if not rclone.is_installed():
-		raise UploadError("rclone binary not detected. Please see: https://rclone.org/install/")
 
 	usage = """
 Usage: %prog [options] 
