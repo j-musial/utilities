@@ -15,7 +15,7 @@ Requirements
 Configuration
 ------------
 The first time the script is run access_key and secret_key must be provided
-```python CRYOHYDRO_uploader.py -l /path/to/file -p destination/path -c credential ```
+```python CRYOHYDRO_uploader.py -l /path/to/file -p destination/path -i access_key -k secret_key ```
 
 
 Usage Examples
@@ -26,14 +26,13 @@ Command Line Options
 ------------------
 -l, --local-file       Path to the file to upload
 -p, --path-s3          Destination path in S3 bucket
--i, --id               S3 access key ID (optional if using config file)
--k, --secret           S3 secret access key (optional if using config file)
+-c, --credentials_path Path to the credential file
 -o, --overwrite        Overwrites existing files in the destination bucket
 
 
 Author: CDSE & CLMS
 License: MIT
-Version: 0.0.9
+Version: 0.0.10
 """
 
 import configparser
@@ -217,7 +216,7 @@ def main():
 	parser.add_option("-p", "--path-s3", dest="s3_path",
 					  help="relative path of a file in the S3 bucket of the CLMS producer")
 	parser.add_option("-c", "--credentials_path", dest="credentials_path",
-					  help="file path to the S3 credentials" )
+					  help="file path to the S3 credential" )
 
 	options, _ = parser.parse_args()
 
