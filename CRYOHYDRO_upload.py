@@ -45,9 +45,7 @@ from pathlib import Path
 from typing import Dict, Union, Optional, Tuple
 from dataclasses import dataclass
 
-
-from rclone_python import rclone
-
+import importlib.util
 
 @dataclass
 class UploadConfig:
@@ -204,6 +202,13 @@ def config_settings(config_path: str) -> UploadConfig:
 
 
 def main():
+
+	package_name = 'rclone-python'
+	if importlib.util.find_spec(package_name) is None:
+		raise UploadError(f"{package_name} is not installed. Please see: https://pypi.org/project/rclone-python/")
+	else:
+		from rclone_python import rclone
+
 	if not rclone.is_installed():
 		raise UploadError("rclone binary not detected. Please see: https://rclone.org/install/")
 
