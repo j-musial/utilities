@@ -164,7 +164,7 @@ def rclone_setup(credentials_path: Path) -> None:
 		access_key_id, secret_access_key = parse_credentials(credentials_path)
 
 		rclone.create_remote(
-			'CLMS',
+			'CRYOHYDRO',
 			remote_type=RemoteTypes.s3,
 			client_id=access_key_id,
 			client_secret=secret_access_key,
@@ -190,14 +190,14 @@ def config_settings(config_path: str) -> UploadConfig:
 		config.read(config_path)
 
 		return UploadConfig(
-			rclone_type=config['CLMS']['type'],
-			provider=config['CLMS']['provider'],
-			env_auth=config['CLMS'].getboolean('env_auth'),
-			access_key_id=config['CLMS']['client_id'],
-			secret_access_key=config['CLMS']['client_secret'],
-			region=config['CLMS']['region'],
-			endpoint=config['CLMS']['endpoint'],
-			location_constraint=config['CLMS']['location_constraint']
+			rclone_type=config['CRYOHYDRO']['type'],
+			provider=config['CRYOHYDRO']['provider'],
+			env_auth=config['CRYOHYDRO'].getboolean('env_auth'),
+			access_key_id=config['CRYOHYDRO']['client_id'],
+			secret_access_key=config['CRYOHYDRO']['client_secret'],
+			region=config['CRYOHYDRO']['region'],
+			endpoint=config['CRYOHYDRO']['endpoint'],
+			location_constraint=config['CRYOHYDRO']['location_constraint']
 		)
 	except Exception as e:
 		raise UploadError(f"Error parsing configuration file: {str(e)}")
