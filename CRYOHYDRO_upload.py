@@ -60,12 +60,10 @@ if not rclone.is_installed():
 class UploadConfig:
 	rclone_type: str
 	provider: str
-	env_auth: bool
 	access_key_id: str
 	secret_access_key: str
 	region: str
 	endpoint: str
-	location_constraint: str
 
 
 class UploadError(Exception):
@@ -110,7 +108,7 @@ def pusher(config: UploadConfig, local_file: str, s3_path: str, overwrite: bool 
 
 	try:
 		metadata = calculate_file_metadata(local_file)
-		destination = f'CLMS:CLMS-CRYOHYDRO-INGESTION/{s3_path}'.replace('//', '/')
+		destination = f'CRYOHYDRO:CLMS-CRYOHYDRO-INGESTION/{s3_path}'.replace('//', '/')
 
 		rclone.copy(
 			local_file,
@@ -173,15 +171,15 @@ def rclone_setup(credentials_path: Path) -> None:
 		rclone.create_remote(
 			'CRYOHYDRO',
 			remote_type=RemoteTypes.s3,
-			client_id=access_key_id,
-			client_secret=secret_access_key,
+			#client_id=access_key_id,
+			#client_secret=secret_access_key,
 			**{"type": 's3',
 			   "provider": 'Ceph',
-			   "env_auth": "True",
-			   "region": 'default',
+			   "access_key_id": access_key_id,
+			   "secret_access_key": secret_access_key,
 			   "endpoint": 'https://s3.waw3-1.cloudferro.com',
-			   "location_constraint": 'default',
-			   # "acl" : "public-read",
+			   "region": 'default',
+			   "env_auth": "True",
 			   })
 	except Exception as e:
 		raise UploadError(f"Error setting up rclone: {str(e)}")
@@ -199,12 +197,10 @@ def config_settings(config_path: str) -> UploadConfig:
 		return UploadConfig(
 			rclone_type=config['CRYOHYDRO']['type'],
 			provider=config['CRYOHYDRO']['provider'],
-			env_auth=config['CRYOHYDRO'].getboolean('env_auth'),
-			access_key_id=config['CRYOHYDRO']['client_id'],
-			secret_access_key=config['CRYOHYDRO']['client_secret'],
+			access_key_id=config['CRYOHYDRO']['access_key_id'],
+			secret_access_key=config['CRYOHYDRO']['secret_access_key'],
 			region=config['CRYOHYDRO']['region'],
 			endpoint=config['CRYOHYDRO']['endpoint'],
-			location_constraint=config['CRYOHYDRO']['location_constraint']
 		)
 	except Exception as e:
 		raise UploadError(f"Error parsing configuration file: {str(e)}")
