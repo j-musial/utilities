@@ -89,7 +89,7 @@ def calculate_file_metadata(filepath: str) -> Dict[str, str]:
 			md5_checksum = md5(f.read()).hexdigest()
 
 		return {
-			'timestamp': timestamp.strftime('%Y-%m-%dT%H:%M:%S'),
+			'timestamp': int(timestamp.timestamp()),
 			'last_modified': last_modified,
 			'file_size': file_size,
 			'md5_checksum': md5_checksum
